@@ -75,8 +75,21 @@ def show_shopping_cart():
     #
     # Make sure your function can also handle the case wherein no cart has
     # been added to the session
+    melon_list = []
+    total = 0
 
-    return render_template("cart.html")
+    for melon_id in session['cart']:
+        melon = melons.get_by_id(melon_id)
+
+        melon.quantity = session['cart'][melon_id]
+        melon.total_price = melon.price * melon.quantity
+        total += melon.total_price
+
+        melon_list.append(melon)
+
+    print(melon_list[0].quantity)
+
+    return render_template("cart.html", melons=melon_list, total=total)
 
 
 @app.route("/add_to_cart/<melon_id>")
@@ -97,19 +110,38 @@ def add_to_cart(melon_id):
     # - increment the count for that melon id by 1
     # - flash a success message
     # - redirect the user to the cart page
-
+    # session.clear()
     print(session)
-    if "cart" in session.keys():
-        session["cart"][melon_id] = session["cart"].get(melon_id, 0) + 1
+    # print(session['cart'].keys())
+
+
+
+    if 'cart' in session:
+        cart = session['cart']
     else:
+        cart = session['cart'] = {}
 
-        session["cart"] = {melon_id: 1}
+        print("if")
+        # session['cart'] = {}
 
 
+    if melon_id not in cart:
+        cart[melon_id] = 1
+    else:
+        cart[melon_id]= cart[melon_id] + 1
+    # elif melon_id in session["cart"].keys():
+    #     print(session["cart"].get(melon_id) + 1)
+    #     session["cart"][melon_id] = session["cart"].get(melon_id) + 1
+    #     print(session["cart"][melon_id])
+
+    # else:
+    #     print("else")
+    #     session["cart"][melon_id] = 1
 
     print(session)
-
-    return "test"
+    flash("added " + melons.get_by_id(melon_id).common_name + " to cart")
+    session.modified = True
+    return redirect("/cart")
 
 
 @app.route("/login", methods=["GET"])
